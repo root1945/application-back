@@ -9,17 +9,15 @@ import { faker } from '@faker-js/faker'
 
 describe('AddAccountService', () => {
   let sut: AddAccountService
-  let loadUserAccountRepo: MockProxy<LoadUserAccountRepository>
+  let userAccountRepo: MockProxy<LoadUserAccountRepository & SaveUserAccountRepo>
   let hasher: MockProxy<Hasher>
-  let saveUserAccountRepo: MockProxy<SaveUserAccountRepo>
   let fakeAddAccount: AddAccount.Params
 
   beforeAll(() => {
-    loadUserAccountRepo = mock()
-    loadUserAccountRepo.load.mockResolvedValue(undefined)
+    userAccountRepo = mock()
+    userAccountRepo.load.mockResolvedValue(undefined)
     hasher = mock()
     hasher.hash.mockResolvedValue('hashed_password')
-    saveUserAccountRepo = mock()
     fakeAddAccount = {
       name: faker.name.firstName(),
       email: faker.internet.email(),
@@ -29,18 +27,18 @@ describe('AddAccountService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    sut = new AddAccountService(loadUserAccountRepo, hasher, saveUserAccountRepo)
+    sut = new AddAccountService(userAccountRepo, hasher)
   })
 
   it('should call LoadUserAccountRepo with correct params', async () => {
     await sut.perform(fakeAddAccount)
 
-    expect(loadUserAccountRepo.load).toHaveBeenCalledWith({ email: fakeAddAccount.email })
-    expect(loadUserAccountRepo.load).toHaveBeenCalledTimes(1)
+    expect(userAccountRepo.load).toHaveBeenCalledWith({ email: fakeAddAccount.email })
+    expect(userAccountRepo.load).toHaveBeenCalledTimes(1)
   })
 
   it('should return RegistrationError if LoadUserAccountRepo returns an account', async () => {
-    loadUserAccountRepo.load.mockResolvedValueOnce({
+    userAccountRepo.load.mockResolvedValueOnce({
       id: faker.datatype.uuid(),
       name: faker.name.firstName(),
       email: faker.internet.email(),
@@ -62,11 +60,11 @@ describe('AddAccountService', () => {
   it('should call SaveUserAccountRepo with correct params', async () => {
     await sut.perform(fakeAddAccount)
 
-    expect(saveUserAccountRepo.save).toHaveBeenCalledWith({
+    expect(userAccountRepo.saveWithAccount).toHaveBeenCalledWith({
       name: fakeAddAccount.name,
       email: fakeAddAccount.email,
       password: 'hashed_password'
     })
-    expect(saveUserAccountRepo.save).toHaveBeenCalledTimes(1)
+    expect(userAccountRepo.saveWithAccount).toHaveBeenCalledTimes(1)
   })
 })

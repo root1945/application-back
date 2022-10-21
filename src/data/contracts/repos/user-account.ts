@@ -16,7 +16,7 @@ export namespace LoadUserAccountRepository {
 }
 
 export interface SaveUserAccountRepo {
-  save: (params: SaveUserAccountRepo.Params) => Promise<SaveUserAccountRepo.Result>
+  saveWithAccount: (params: SaveUserAccountRepo.Params) => Promise<SaveUserAccountRepo.Result>
 }
 
 export namespace SaveUserAccountRepo {
