@@ -14,3 +14,22 @@ export namespace LoadUserAccountRepository {
     password: string
   }
 }
+
+export interface SaveUserAccountRepo {
+  save: (params: SaveUserAccountRepo.Params) => Promise<SaveUserAccountRepo.Result>
+}
+
+export namespace SaveUserAccountRepo {
+  export type Params = {
+    name: string
+    email: string
+    password: string
+  }
+
+  export type Result = {
+    id: string
+    name: string
+    email: string
+    password: string
+  }
+}

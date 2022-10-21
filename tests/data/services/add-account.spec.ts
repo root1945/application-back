@@ -1,5 +1,5 @@
 import { AddAccountService } from '@/data/services'
-import { LoadUserAccountRepository } from '@/data/contracts/repos'
+import { LoadUserAccountRepository, SaveUserAccountRepo } from '@/data/contracts/repos'
 import { AddAccount } from '@/domain/features'
 import { RegistrationError } from '@/domain/errors'
 import { Hasher } from '@/data/contracts/crypto'
@@ -11,6 +11,7 @@ describe('AddAccountService', () => {
   let sut: AddAccountService
   let loadUserAccountRepo: MockProxy<LoadUserAccountRepository>
   let hasher: MockProxy<Hasher>
+  let saveUserAccountRepo: MockProxy<SaveUserAccountRepo>
   let fakeAddAccount: AddAccount.Params
 
   beforeAll(() => {
@@ -18,6 +19,7 @@ describe('AddAccountService', () => {
     loadUserAccountRepo.load.mockResolvedValue(undefined)
     hasher = mock()
     hasher.hash.mockResolvedValue('hashed_password')
+    saveUserAccountRepo = mock()
     fakeAddAccount = {
       name: faker.name.firstName(),
       email: faker.internet.email(),
@@ -27,7 +29,7 @@ describe('AddAccountService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    sut = new AddAccountService(loadUserAccountRepo, hasher)
+    sut = new AddAccountService(loadUserAccountRepo, hasher, saveUserAccountRepo)
   })
 
   it('should call LoadUserAccountRepo with correct params', async () => {
@@ -55,5 +57,16 @@ describe('AddAccountService', () => {
 
     expect(hasher.hash).toHaveBeenCalledWith({ value: fakeAddAccount.password })
     expect(hasher.hash).toHaveBeenCalledTimes(1)
+  })
+
+  it('should call SaveUserAccountRepo with correct params', async () => {
+    await sut.perform(fakeAddAccount)
+
+    expect(saveUserAccountRepo.save).toHaveBeenCalledWith({
+      name: fakeAddAccount.name,
+      email: fakeAddAccount.email,
+      password: 'hashed_password'
+    })
+    expect(saveUserAccountRepo.save).toHaveBeenCalledTimes(1)
   })
 })
