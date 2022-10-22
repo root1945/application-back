@@ -1,8 +1,7 @@
 import { AddAccountService } from '@/data/services'
 import { LoadUserAccountRepository, SaveUserAccountRepo } from '@/data/contracts/repos'
-import { AddAccount } from '@/domain/features'
 import { RegistrationError } from '@/domain/errors'
-import { Hasher } from '@/data/contracts/crypto'
+import { Hasher, TokenGenerator } from '@/data/contracts/crypto'
 
 import { mock, MockProxy } from 'jest-mock-extended'
 import { faker } from '@faker-js/faker'
@@ -10,19 +9,22 @@ import { faker } from '@faker-js/faker'
 describe('AddAccountService', () => {
   let sut: AddAccountService
   let userAccountRepo: MockProxy<LoadUserAccountRepository & SaveUserAccountRepo>
-  let hasher: MockProxy<Hasher>
-  let fakeAddAccount: AddAccount.Params
+  let hasher: MockProxy<Hasher & TokenGenerator>
+  let id: string
+  let name: string
+  let email: string
+  let password: string
 
   beforeAll(() => {
+    id = faker.datatype.uuid()
+    name = faker.name.firstName()
+    email = faker.internet.email()
+    password = faker.internet.password()
     userAccountRepo = mock()
     userAccountRepo.load.mockResolvedValue(undefined)
+    userAccountRepo.saveWithAccount.mockResolvedValue({ id, name, email, password })
     hasher = mock()
     hasher.hash.mockResolvedValue('hashed_password')
-    fakeAddAccount = {
-      name: faker.name.firstName(),
-      email: faker.internet.email(),
-      password: faker.internet.password()
-    }
   })
 
   beforeEach(() => {
@@ -31,40 +33,38 @@ describe('AddAccountService', () => {
   })
 
   it('should call LoadUserAccountRepo with correct params', async () => {
-    await sut.perform(fakeAddAccount)
+    await sut.perform({ name, email, password })
 
-    expect(userAccountRepo.load).toHaveBeenCalledWith({ email: fakeAddAccount.email })
+    expect(userAccountRepo.load).toHaveBeenCalledWith({ email })
     expect(userAccountRepo.load).toHaveBeenCalledTimes(1)
   })
 
   it('should return RegistrationError if LoadUserAccountRepo returns an account', async () => {
-    userAccountRepo.load.mockResolvedValueOnce({
-      id: faker.datatype.uuid(),
-      name: faker.name.firstName(),
-      email: faker.internet.email(),
-      password: faker.internet.password()
-    })
+    userAccountRepo.load.mockResolvedValueOnce({ id, name, email, password })
 
-    const result = await sut.perform(fakeAddAccount)
+    const result = await sut.perform({ name, email, password })
 
     expect(result).toEqual(new RegistrationError())
   })
 
   it('should call Hasher with correct params', async () => {
-    await sut.perform(fakeAddAccount)
+    await sut.perform({ name, email, password })
 
-    expect(hasher.hash).toHaveBeenCalledWith({ value: fakeAddAccount.password })
+    expect(hasher.hash).toHaveBeenCalledWith({ value: password })
     expect(hasher.hash).toHaveBeenCalledTimes(1)
   })
 
   it('should call SaveUserAccountRepo with correct params', async () => {
-    await sut.perform(fakeAddAccount)
+    await sut.perform({ name, email, password })
 
-    expect(userAccountRepo.saveWithAccount).toHaveBeenCalledWith({
-      name: fakeAddAccount.name,
-      email: fakeAddAccount.email,
-      password: 'hashed_password'
-    })
+    expect(userAccountRepo.saveWithAccount).toHaveBeenCalledWith({ name, email, password: 'hashed_password' })
     expect(userAccountRepo.saveWithAccount).toHaveBeenCalledTimes(1)
+  })
+
+  it('should call TokenGenerator with correct params', async () => {
+    await sut.perform({ name, email, password })
+
+    expect(hasher.generate).toHaveBeenCalledWith({ key: id, expirationInMs: 1800000 })
+    expect(hasher.generate).toHaveBeenCalledTimes(1)
   })
 })
