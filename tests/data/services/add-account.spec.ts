@@ -99,4 +99,12 @@ describe('AddAccountService', () => {
 
     await expect(promise).rejects.toThrow(new Error('repo_error'))
   })
+
+  it('Should rethrow if TokenGenerator throws', async () => {
+    hasher.generate.mockRejectedValueOnce(new Error('token_generator_error'))
+
+    const promise = sut.perform({ name, email, password })
+
+    await expect(promise).rejects.toThrow(new Error('token_generator_error'))
+  })
 })
