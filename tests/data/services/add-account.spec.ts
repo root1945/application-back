@@ -2,6 +2,7 @@ import { AddAccountService } from '@/data/services'
 import { LoadUserAccountRepository, SaveUserAccountRepo } from '@/data/contracts/repos'
 import { RegistrationError } from '@/domain/errors'
 import { Hasher, TokenGenerator } from '@/data/contracts/crypto'
+import { AccessToken } from '@/domain/models'
 
 import { mock, MockProxy } from 'jest-mock-extended'
 import { faker } from '@faker-js/faker'
@@ -25,6 +26,7 @@ describe('AddAccountService', () => {
     userAccountRepo.saveWithAccount.mockResolvedValue({ id, name, email, password })
     hasher = mock()
     hasher.hash.mockResolvedValue('hashed_password')
+    hasher.generate.mockResolvedValue('generated_token')
   })
 
   beforeEach(() => {
@@ -66,5 +68,11 @@ describe('AddAccountService', () => {
 
     expect(hasher.generate).toHaveBeenCalledWith({ key: id, expirationInMs: 1800000 })
     expect(hasher.generate).toHaveBeenCalledTimes(1)
+  })
+
+  it('Should return accessToken on success', async () => {
+    const result = await sut.perform({ name, email, password })
+
+    expect(result).toEqual(new AccessToken('generated_token'))
   })
 })

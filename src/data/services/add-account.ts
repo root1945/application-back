@@ -10,11 +10,18 @@ export class AddAccountService {
     private readonly hasher: Hasher & TokenGenerator
   ) {}
 
-  async perform (params: AddAccount.Params): Promise<RegistrationError> {
-    await this.userAccountRepo.load({ email: params.email })
+  async perform (params: AddAccount.Params): Promise<AddAccount.Result> {
+    const account = await this.userAccountRepo.load({ email: params.email })
+    if (account) {
+      return new RegistrationError()
+    }
     const hashedPassword = await this.hasher.hash({ value: params.password })
-    const account = await this.userAccountRepo.saveWithAccount(Object.assign({}, params, { password: hashedPassword }))
-    await this.hasher.generate({ key: account.id, expirationInMs: AccessToken.expirationInMs })
-    return new RegistrationError()
+    const userAccount = await this.userAccountRepo.saveWithAccount({
+      name: params.name,
+      email: params.email,
+      password: hashedPassword
+    })
+    const accessToken = await this.hasher.generate({ key: userAccount.id, expirationInMs: AccessToken.expirationInMs })
+    return new AccessToken(accessToken)
   }
 }
