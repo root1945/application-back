@@ -1,13 +1,5 @@
-import { LoadUserAccountRepository } from '@/data/contracts/repos'
 import { prismaMock } from '@/tests/infra/repos/prisma/helpers'
-import prismaClient from './helpers/client'
-
-class PrismaUserAccount {
-  async load (params: LoadUserAccountRepository.Params): Promise<LoadUserAccountRepository.Result> {
-    const account = await prismaClient.user.findUnique({ where: { email: params.email } })
-    if (account) return { id: account.id, name: account.name, email: account.email, password: account.password }
-  }
-}
+import { PrismaUserAccount } from '@/infra/repos/prisma'
 
 describe('PrismaUserAccount', () => {
   describe('load', () => {
