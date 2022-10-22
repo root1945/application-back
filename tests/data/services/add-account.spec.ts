@@ -83,4 +83,12 @@ describe('AddAccountService', () => {
 
     await expect(promise).rejects.toThrow(new Error('repo_error'))
   })
+
+  it('Should rethrow if Hasher throws', async () => {
+    hasher.hash.mockRejectedValueOnce(new Error('hasher_error'))
+
+    const promise = sut.perform({ name, email, password })
+
+    await expect(promise).rejects.toThrow(new Error('hasher_error'))
+  })
 })
