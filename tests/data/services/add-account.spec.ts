@@ -75,4 +75,12 @@ describe('AddAccountService', () => {
 
     expect(result).toEqual(new AccessToken('generated_token'))
   })
+
+  it('Should rethrow if LoadUserAccountRepo throws', async () => {
+    userAccountRepo.load.mockRejectedValueOnce(new Error('repo_error'))
+
+    const promise = sut.perform({ name, email, password })
+
+    await expect(promise).rejects.toThrow(new Error('repo_error'))
+  })
 })
