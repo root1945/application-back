@@ -36,5 +36,13 @@ describe('PrismaUserAccount', () => {
         password: 'hashed_password'
       })
     })
+
+    it('should return undefined if email does not exist', async () => {
+      prismaMock.user.findUnique.mockResolvedValueOnce(null)
+
+      const account = await sut.load({ email: 'any_email' })
+
+      expect(account).toBeUndefined()
+    })
   })
 })
