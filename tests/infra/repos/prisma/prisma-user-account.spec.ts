@@ -45,7 +45,7 @@ describe('PrismaUserAccount', () => {
       expect(account).toBeUndefined()
     })
 
-    it('should throw if PrismaClient throws', async () => {
+    it('should rethrow if PrismaClient throws', async () => {
       prismaMock.user.findUnique.mockRejectedValueOnce(new Error('Prisma error'))
 
       const promise = sut.load({ email: 'any_email' })
