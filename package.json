@@ -15,7 +15,9 @@
   },
   "license": "MIT",
   "dependencies": {
-    "module-alias": "^2.2.2"
+    "@prisma/client": "^4.5.0",
+    "module-alias": "^2.2.2",
+    "prisma": "^4.5.0"
   },
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",
@@ -39,5 +41,8 @@
   },
   "engines": {
     "node": "16.x"
+  },
+  "prisma": {
+    "schema": "src/infra/repos/prisma/schema.prisma"
   }
 }

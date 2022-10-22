@@ -1,0 +1,14 @@
+version: '3.1'
+
+services:
+
+  db:
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_boot5463
+      MYSQL_DATABASE: wireless-solutions
+      MYSQL_USER: wireless
+      MYSQL_PASSWORD: wireless123
+    ports:
+      - 3306:3306
