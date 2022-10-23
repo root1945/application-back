@@ -70,5 +70,17 @@ describe('PrismaUserAccount', () => {
         password: 'hashed_password'
       })
     })
+
+    it('should rethrow if PrismaClient throws', async () => {
+      prismaMock.user.create.mockRejectedValueOnce(new Error('Prisma error'))
+
+      const promise = sut.saveWithAccount({
+        name: 'any_name',
+        email: 'any_email',
+        password: 'hashed_password'
+      })
+
+      await expect(promise).rejects.toThrow(new Error('Prisma error'))
+    })
   })
 })
