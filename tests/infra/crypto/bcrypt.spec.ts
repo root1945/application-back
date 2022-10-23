@@ -1,18 +1,7 @@
-import { Hasher } from '@/data/contracts/crypto'
 import bcrypt from 'bcryptjs'
+import { Bcrypt } from '@/infra/crypto'
 
 jest.mock('bcryptjs')
-
-class Bcrypt {
-  constructor (
-    private readonly salt: number
-  ) {}
-
-  async hash (params: Hasher.Params): Promise<Hasher.Result> {
-    const hash = await bcrypt.hash(params.value, this.salt)
-    return hash
-  }
-}
 
 describe('Bcrypt', () => {
   let salt: number
