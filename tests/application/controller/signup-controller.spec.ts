@@ -1,4 +1,6 @@
 import { faker } from '@faker-js/faker'
+import { EmailValidator } from '@/application/validation'
+import { mock, MockProxy } from 'jest-mock-extended'
 
 type HttpRequest = any
 
@@ -8,6 +10,8 @@ type HttpResponse = {
 }
 
 class SignupController {
+  constructor (private readonly emailValidator: EmailValidator) {}
+
   async handle (httpRequest: HttpRequest): Promise<HttpResponse> {
     const { name, email, password } = httpRequest
     if (!name) {
@@ -20,6 +24,13 @@ class SignupController {
       return {
         statusCode: 400,
         data: new Error('Missing param: email')
+      }
+    }
+    const isValid = this.emailValidator.isValid(email)
+    if (!isValid) {
+      return {
+        statusCode: 400,
+        data: new Error('Invalid param: email')
       }
     }
     if (!password) {
@@ -37,12 +48,15 @@ class SignupController {
 
 describe('SignupController', () => {
   let sut: SignupController
+  let emailValidator: MockProxy<EmailValidator>
   let name: string
   let email: string
   let password: string
   let passwordConfirmation: string
 
   beforeAll(() => {
+    emailValidator = mock()
+    emailValidator.isValid.mockReturnValue(true)
     name = faker.name.firstName()
     email = faker.internet.email()
     password = faker.internet.password()
@@ -50,7 +64,8 @@ describe('SignupController', () => {
   })
 
   beforeEach(() => {
-    sut = new SignupController()
+    jest.clearAllMocks()
+    sut = new SignupController(emailValidator)
   })
 
   it('should returns 400 if no name is provided', async () => {
@@ -68,6 +83,16 @@ describe('SignupController', () => {
     expect(httpResponse).toEqual({
       statusCode: 400,
       data: new Error('Missing param: email')
+    })
+  })
+
+  it('should returns 400 if email is invalid', async () => {
+    emailValidator.isValid.mockReturnValueOnce(false)
+    const httpResponse = await sut.handle({ name, email, password, passwordConfirmation })
+
+    expect(httpResponse).toEqual({
+      statusCode: 400,
+      data: new Error('Invalid param: email')
     })
   })
 
