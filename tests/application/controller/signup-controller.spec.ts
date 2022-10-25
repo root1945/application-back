@@ -18,9 +18,13 @@ class SignupController {
 }
 
 describe('SignupController', () => {
-  it('should returns 400 if no name is provided', async () => {
-    const sut = new SignupController()
+  let sut: SignupController
 
+  beforeEach(() => {
+    sut = new SignupController()
+  })
+
+  it('should returns 400 if no name is provided', async () => {
     const httpResponse = await sut.handle({
       name: ''
     })
