@@ -1,7 +1,6 @@
+import { faker } from '@faker-js/faker'
 
-type HttpRequest = {
-  name: string
-}
+type HttpRequest = any
 
 type HttpResponse = {
   statusCode: number
@@ -10,28 +9,52 @@ type HttpResponse = {
 
 class SignupController {
   async handle (httpRequest: HttpRequest): Promise<HttpResponse> {
+    if (!httpRequest.name) {
+      return {
+        statusCode: 400,
+        data: new Error('Missing param: name')
+      }
+    }
     return {
       statusCode: 400,
-      data: new Error('Missing param: name')
+      data: new Error('Missing param: email')
     }
   }
 }
 
 describe('SignupController', () => {
   let sut: SignupController
+  let name: string
+  let email: string
+  let password: string
+  let passwordConfirmation: string
+
+  beforeAll(() => {
+    name = faker.name.firstName()
+    email = faker.internet.email()
+    password = faker.internet.password()
+    passwordConfirmation = password
+  })
 
   beforeEach(() => {
     sut = new SignupController()
   })
 
   it('should returns 400 if no name is provided', async () => {
-    const httpResponse = await sut.handle({
-      name: ''
-    })
+    const httpResponse = await sut.handle({ email, password, passwordConfirmation })
 
     expect(httpResponse).toEqual({
       statusCode: 400,
       data: new Error('Missing param: name')
+    })
+  })
+
+  it('should returns 400 if no email is provided', async () => {
+    const httpResponse = await sut.handle({ name, password, passwordConfirmation })
+
+    expect(httpResponse).toEqual({
+      statusCode: 400,
+      data: new Error('Missing param: email')
     })
   })
 })
