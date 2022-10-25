@@ -9,15 +9,22 @@ type HttpResponse = {
 
 class SignupController {
   async handle (httpRequest: HttpRequest): Promise<HttpResponse> {
-    if (!httpRequest.name) {
+    const { name, email } = httpRequest
+    if (!name) {
       return {
         statusCode: 400,
         data: new Error('Missing param: name')
       }
     }
+    if (!email) {
+      return {
+        statusCode: 400,
+        data: new Error('Missing param: email')
+      }
+    }
     return {
       statusCode: 400,
-      data: new Error('Missing param: email')
+      data: new Error('Missing param: password')
     }
   }
 }
@@ -55,6 +62,15 @@ describe('SignupController', () => {
     expect(httpResponse).toEqual({
       statusCode: 400,
       data: new Error('Missing param: email')
+    })
+  })
+
+  it('should returns 400 if no password is provided', async () => {
+    const httpResponse = await sut.handle({ name, email, passwordConfirmation })
+
+    expect(httpResponse).toEqual({
+      statusCode: 400,
+      data: new Error('Missing param: password')
     })
   })
 })
