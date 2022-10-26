@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker'
 import { EmailValidator } from '@/application/validation'
 import { mock, MockProxy } from 'jest-mock-extended'
+import { AddAccount } from '@/domain/features'
 
 type HttpRequest = any
 
@@ -10,7 +11,10 @@ type HttpResponse = {
 }
 
 class SignupController {
-  constructor (private readonly emailValidator: EmailValidator) {}
+  constructor (
+    private readonly emailValidator: EmailValidator,
+    private readonly addAccount: AddAccount
+  ) {}
 
   async handle (httpRequest: HttpRequest): Promise<HttpResponse> {
     const { name, email, password, passwordConfirmation } = httpRequest
@@ -45,6 +49,7 @@ class SignupController {
         data: new Error('Missing param: passwordConfirmation')
       }
     }
+    await this.addAccount.perform({ name, email, password })
     return {
       statusCode: 400,
       data: new Error('Invalid param: passwordConfirmation')
@@ -55,6 +60,7 @@ class SignupController {
 describe('SignupController', () => {
   let sut: SignupController
   let emailValidator: MockProxy<EmailValidator>
+  let addAccount: MockProxy<AddAccount>
   let name: string
   let email: string
   let password: string
@@ -63,6 +69,7 @@ describe('SignupController', () => {
   beforeAll(() => {
     emailValidator = mock()
     emailValidator.isValid.mockReturnValue(true)
+    addAccount = mock()
     name = faker.name.firstName()
     email = faker.internet.email()
     password = faker.internet.password()
@@ -71,7 +78,7 @@ describe('SignupController', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    sut = new SignupController(emailValidator)
+    sut = new SignupController(emailValidator, addAccount)
   })
 
   it('should returns 400 if no name is provided', async () => {
@@ -134,5 +141,12 @@ describe('SignupController', () => {
       statusCode: 400,
       data: new Error('Invalid param: passwordConfirmation')
     })
+  })
+
+  it('should call AddAccount with correct values', async () => {
+    await sut.handle({ name, email, password, passwordConfirmation })
+
+    expect(addAccount.perform).toHaveBeenCalledWith({ name, email, password })
+    expect(addAccount.perform).toHaveBeenCalledTimes(1)
   })
 })
