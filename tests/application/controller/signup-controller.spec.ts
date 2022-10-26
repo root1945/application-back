@@ -92,6 +92,13 @@ describe('SignupController', () => {
     })
   })
 
+  it('should call EmailValidator with correct email', async () => {
+    await sut.handle({ name, email, password, passwordConfirmation })
+
+    expect(emailValidator.isValid).toHaveBeenCalledWith(email)
+    expect(emailValidator.isValid).toHaveBeenCalledTimes(1)
+  })
+
   it('should returns 400 if email is invalid', async () => {
     emailValidator.isValid.mockReturnValueOnce(false)
     const httpResponse = await sut.handle({ name, email, password, passwordConfirmation })
