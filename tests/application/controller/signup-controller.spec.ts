@@ -13,7 +13,7 @@ class SignupController {
   constructor (private readonly emailValidator: EmailValidator) {}
 
   async handle (httpRequest: HttpRequest): Promise<HttpResponse> {
-    const { name, email, password } = httpRequest
+    const { name, email, password, passwordConfirmation } = httpRequest
     if (!name) {
       return {
         statusCode: 400,
@@ -39,9 +39,15 @@ class SignupController {
         data: new Error('Missing param: password')
       }
     }
+    if (!passwordConfirmation) {
+      return {
+        statusCode: 400,
+        data: new Error('Missing param: passwordConfirmation')
+      }
+    }
     return {
       statusCode: 400,
-      data: new Error('Missing param: passwordConfirmation')
+      data: new Error('Invalid param: passwordConfirmation')
     }
   }
 }
@@ -111,6 +117,15 @@ describe('SignupController', () => {
     expect(httpResponse).toEqual({
       statusCode: 400,
       data: new Error('Missing param: passwordConfirmation')
+    })
+  })
+
+  it('should returns 400 if passwordConfirmation fails', async () => {
+    const httpResponse = await sut.handle({ name, email, password, passwordConfirmation: faker.internet.password() })
+
+    expect(httpResponse).toEqual({
+      statusCode: 400,
+      data: new Error('Invalid param: passwordConfirmation')
     })
   })
 })
