@@ -2,12 +2,21 @@ import { faker } from '@faker-js/faker'
 import { EmailValidator } from '@/application/validation'
 import { mock, MockProxy } from 'jest-mock-extended'
 import { AddAccount } from '@/domain/features'
+import { AccessToken } from '@/domain/models'
 
 type HttpRequest = any
 
 type HttpResponse = {
   statusCode: number
   data: any
+}
+
+class ServerError extends Error {
+  constructor (err?: Error) {
+    super('Internal server error')
+    this.name = 'ServerError'
+    this.stack = err?.stack
+  }
 }
 
 class SignupController {
@@ -17,42 +26,65 @@ class SignupController {
   ) {}
 
   async handle (httpRequest: HttpRequest): Promise<HttpResponse> {
-    const { name, email, password, passwordConfirmation } = httpRequest
-    if (!name) {
-      return {
-        statusCode: 400,
-        data: new Error('Missing param: name')
+    try {
+      const { name, email, password, passwordConfirmation } = httpRequest
+      if (!name) {
+        return {
+          statusCode: 400,
+          data: new Error('Missing param: name')
+        }
       }
-    }
-    if (!email) {
-      return {
-        statusCode: 400,
-        data: new Error('Missing param: email')
+      if (!email) {
+        return {
+          statusCode: 400,
+          data: new Error('Missing param: email')
+        }
       }
-    }
-    const isValid = this.emailValidator.isValid(email)
-    if (!isValid) {
-      return {
-        statusCode: 400,
-        data: new Error('Invalid param: email')
+      const isValid = this.emailValidator.isValid(email)
+      if (!isValid) {
+        return {
+          statusCode: 400,
+          data: new Error('Invalid param: email')
+        }
       }
-    }
-    if (!password) {
-      return {
-        statusCode: 400,
-        data: new Error('Missing param: password')
+      if (!password) {
+        return {
+          statusCode: 400,
+          data: new Error('Missing param: password')
+        }
       }
-    }
-    if (!passwordConfirmation) {
-      return {
-        statusCode: 400,
-        data: new Error('Missing param: passwordConfirmation')
+      if (!passwordConfirmation) {
+        return {
+          statusCode: 400,
+          data: new Error('Missing param: passwordConfirmation')
+        }
       }
-    }
-    await this.addAccount.perform({ name, email, password })
-    return {
-      statusCode: 400,
-      data: new Error('Invalid param: passwordConfirmation')
+
+      if (password !== passwordConfirmation) {
+        return {
+          statusCode: 400,
+          data: new Error('Invalid param: passwordConfirmation')
+        }
+      }
+      const accessToken = await this.addAccount.perform({ name, email, password })
+      if (accessToken instanceof AccessToken){
+        return {
+          statusCode: 200,
+          data: {
+            accessToken: accessToken.value
+          }
+        }
+      } else {
+        return {
+          statusCode: 400,
+          data: accessToken
+        }
+      }
+    } catch (err: any) {
+      return {
+        statusCode: 500,
+        data: new ServerError(err)
+      }
     }
   }
 }
@@ -70,6 +102,7 @@ describe('SignupController', () => {
     emailValidator = mock()
     emailValidator.isValid.mockReturnValue(true)
     addAccount = mock()
+    addAccount.perform.mockResolvedValue(new AccessToken('any_token'))
     name = faker.name.firstName()
     email = faker.internet.email()
     password = faker.internet.password()
@@ -148,5 +181,24 @@ describe('SignupController', () => {
 
     expect(addAccount.perform).toHaveBeenCalledWith({ name, email, password })
     expect(addAccount.perform).toHaveBeenCalledTimes(1)
+  })
+
+  it('should return 200 if AddAccount succeeds', async () => {
+    const httpResponse = await sut.handle({ name, email, password, passwordConfirmation })
+
+    expect(httpResponse).toEqual({
+      statusCode: 200,
+      data: { accessToken: 'any_token' }
+    })
+  })
+
+  it('should returns 500 if AddAccount throws', async () => {
+    addAccount.perform.mockRejectedValueOnce(new Error())
+    const httpResponse = await sut.handle({ name, email, password, passwordConfirmation })
+
+    expect(httpResponse).toEqual({
+      statusCode: 500,
+      data: new ServerError()
+    })
   })
 })

@@ -2,7 +2,7 @@ import { RegistrationError } from '@/domain/errors'
 import { AccessToken } from '@/domain/models'
 
 export interface AddAccount {
-  perform: (params: AddAccount.Params) => Promise<void>
+  perform: (params: AddAccount.Params) => Promise<AddAccount.Result>
 }
 
 export namespace AddAccount {

@@ -4,7 +4,7 @@ import { RegistrationError } from '@/domain/errors'
 import { Hasher, TokenGenerator } from '@/data/contracts/crypto'
 import { AccessToken } from '@/domain/models'
 
-export class AddAccountService {
+export class AddAccountService implements AddAccount {
   constructor (
     private readonly userAccountRepo: LoadUserAccountRepository & SaveUserAccountRepo,
     private readonly hasher: Hasher & TokenGenerator
