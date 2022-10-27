@@ -3,6 +3,7 @@ import { EmailValidator } from '@/application/validation'
 import { mock, MockProxy } from 'jest-mock-extended'
 import { AddAccount } from '@/domain/features'
 import { AccessToken } from '@/domain/models'
+import { RegistrationError } from '@/domain/errors'
 
 type HttpRequest = any
 
@@ -181,6 +182,17 @@ describe('SignupController', () => {
 
     expect(addAccount.perform).toHaveBeenCalledWith({ name, email, password })
     expect(addAccount.perform).toHaveBeenCalledTimes(1)
+  })
+
+  it('should return 400 if Registration fails', async () => {
+    addAccount.perform.mockResolvedValueOnce(new RegistrationError())
+
+    const httpResponse = await sut.handle({ name, email, password, passwordConfirmation })
+
+    expect(httpResponse).toEqual({
+      statusCode: 400,
+      data: new RegistrationError()
+    })
   })
 
   it('should return 200 if AddAccount succeeds', async () => {
