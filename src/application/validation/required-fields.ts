@@ -1,6 +1,6 @@
 import { MissingParamError } from '@/application/errors'
 
-export class RequiredFields {
+export class RequiredFieldsValidation {
   constructor (private readonly fieldNames: string[]) {}
 
   validate (input: any): MissingParamError | undefined {

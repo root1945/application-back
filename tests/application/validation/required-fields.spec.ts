@@ -1,9 +1,9 @@
-import { RequiredFields } from '@/application/validation'
+import { RequiredFieldsValidation } from '@/application/validation'
 import { MissingParamError } from '@/application/errors'
 
-describe('RequiredFields', () => {
+describe('RequiredFieldsValidation', () => {
   it('should return MissingParamError if no value is provided', () => {
-    const sut = new RequiredFields(['any_field'])
+    const sut = new RequiredFieldsValidation(['any_field'])
 
     const error = sut.validate({})
 
@@ -11,7 +11,7 @@ describe('RequiredFields', () => {
   })
 
   it('should return undefined if all required fields are provided', () => {
-    const sut = new RequiredFields(['any_field'])
+    const sut = new RequiredFieldsValidation(['any_field'])
 
     const error = sut.validate({ any_field: 'any_value' })
 

@@ -1,4 +1,4 @@
-import { EmailValidator, RequiredFields } from '@/application/validation'
+import { EmailValidator, RequiredFieldsValidation } from '@/application/validation'
 import { AddAccount } from '@/domain/features'
 import { HttpRequest, HttpResponse } from '@/application/helpers'
 import { ServerError, InvalidParamError } from '@/application/errors'
@@ -52,7 +52,7 @@ export class SignupController {
 
   validate (httpRequest: HttpRequest): Error | undefined {
     const requiredFields = ['name', 'email', 'password', 'passwordConfirmation']
-    const error = new RequiredFields(requiredFields).validate(httpRequest)
+    const error = new RequiredFieldsValidation(requiredFields).validate(httpRequest)
     if (error) {
       return error
     }
