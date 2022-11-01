@@ -1,22 +1,5 @@
-
-class MissingParamError extends Error {
-  constructor (paramName: string) {
-    super(`Missing param: ${paramName}`)
-    this.name = 'MissingParamError'
-  }
-}
-
-class RequiredFields {
-  constructor (private readonly fieldNames: string[]) {}
-
-  validate (input: any): MissingParamError | undefined {
-    for (const field of this.fieldNames) {
-      if (!input[field]) {
-        return new MissingParamError(field)
-      }
-    }
-  }
-}
+import { RequiredFields } from '@/application/validation'
+import { MissingParamError } from '@/application/errors'
 
 describe('RequiredFields', () => {
   it('should return MissingParamError if no value is provided', () => {
