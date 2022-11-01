@@ -1,7 +1,7 @@
 import { EmailValidator, RequiredFields } from '@/application/validation'
 import { AddAccount } from '@/domain/features'
 import { HttpRequest, HttpResponse } from '@/application/helpers'
-import { ServerError } from '@/application/errors'
+import { ServerError, InvalidParamError } from '@/application/errors'
 import { AccessToken } from '@/domain/models'
 
 export class SignupController {
@@ -22,13 +22,6 @@ export class SignupController {
 
       const { name, email, password, passwordConfirmation } = httpRequest
 
-      const isValid = this.emailValidator.isValid(email)
-      if (!isValid) {
-        return {
-          statusCode: 400,
-          data: new Error('Invalid param: email')
-        }
-      }
       if (password !== passwordConfirmation) {
         return {
           statusCode: 400,
@@ -62,6 +55,10 @@ export class SignupController {
     const error = new RequiredFields(requiredFields).validate(httpRequest)
     if (error) {
       return error
+    }
+    const isValid = this.emailValidator.isValid(httpRequest.email)
+    if (!isValid) {
+      return new InvalidParamError('email')
     }
   }
 }
