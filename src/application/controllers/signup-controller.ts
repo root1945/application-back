@@ -1,4 +1,4 @@
-import { EmailValidator } from '@/application/validation'
+import { EmailValidator, RequiredFields } from '@/application/validation'
 import { AddAccount } from '@/domain/features'
 import { HttpRequest, HttpResponse } from '@/application/helpers'
 import { ServerError } from '@/application/errors'
@@ -12,19 +12,16 @@ export class SignupController {
 
   async handle (httpRequest: HttpRequest): Promise<HttpResponse> {
     try {
+      const error = this.validate(httpRequest)
+      if (error) {
+        return {
+          statusCode: 400,
+          data: error
+        }
+      }
+
       const { name, email, password, passwordConfirmation } = httpRequest
-      if (!name) {
-        return {
-          statusCode: 400,
-          data: new Error('Missing param: name')
-        }
-      }
-      if (!email) {
-        return {
-          statusCode: 400,
-          data: new Error('Missing param: email')
-        }
-      }
+
       const isValid = this.emailValidator.isValid(email)
       if (!isValid) {
         return {
@@ -32,19 +29,6 @@ export class SignupController {
           data: new Error('Invalid param: email')
         }
       }
-      if (!password) {
-        return {
-          statusCode: 400,
-          data: new Error('Missing param: password')
-        }
-      }
-      if (!passwordConfirmation) {
-        return {
-          statusCode: 400,
-          data: new Error('Missing param: passwordConfirmation')
-        }
-      }
-
       if (password !== passwordConfirmation) {
         return {
           statusCode: 400,
@@ -70,6 +54,14 @@ export class SignupController {
         statusCode: 500,
         data: new ServerError(err)
       }
+    }
+  }
+
+  validate (httpRequest: HttpRequest): Error | undefined {
+    const requiredFields = ['name', 'email', 'password', 'passwordConfirmation']
+    const error = new RequiredFields(requiredFields).validate(httpRequest)
+    if (error) {
+      return error
     }
   }
 }
