@@ -1,14 +1,5 @@
 import { InvalidParamError } from '@/application/errors'
-
-class CompareFieldsValidation {
-  constructor (readonly field: string, readonly fieldToCompare: string) {}
-
-  validate (input: any): Error | undefined {
-    return input[this.field] !== input[this.fieldToCompare]
-      ? new InvalidParamError(this.fieldToCompare)
-      : undefined
-  }
-}
+import { CompareFieldsValidation } from '@/application/validation'
 
 describe('CompareFieldsValidation', () => {
   it('should return InvalidParamError if validation fails', () => {
