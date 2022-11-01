@@ -1,8 +1,19 @@
 import { EmailValidator, RequiredFieldsValidation, CompareFieldsValidation } from '@/application/validation'
 import { AddAccount } from '@/domain/features'
-import { HttpRequest, HttpResponse } from '@/application/helpers'
-import { ServerError, InvalidParamError } from '@/application/errors'
+import { HttpResponse, badRequest, ok, serverError } from '@/application/helpers'
+import { InvalidParamError } from '@/application/errors'
 import { AccessToken } from '@/domain/models'
+
+type HttpRequest = {
+  name: string
+  email: string
+  password: string
+  passwordConfirmation: string
+}
+
+type Model = Error | {
+  accessToken: string
+}
 
 export class SignupController {
   constructor (
@@ -10,37 +21,19 @@ export class SignupController {
     private readonly addAccount: AddAccount
   ) {}
 
-  async handle (httpRequest: HttpRequest): Promise<HttpResponse> {
+  async handle (httpRequest: HttpRequest): Promise<HttpResponse<Model>> {
     try {
       const error = this.validate(httpRequest)
-      if (error) {
-        return {
-          statusCode: 400,
-          data: error
-        }
-      }
-
+      if (error) return badRequest(error)
       const { name, email, password } = httpRequest
-
       const accessToken = await this.addAccount.perform({ name, email, password })
       if (accessToken instanceof AccessToken){
-        return {
-          statusCode: 200,
-          data: {
-            accessToken: accessToken.value
-          }
-        }
+        return ok({ accessToken: accessToken.value })
       } else {
-        return {
-          statusCode: 400,
-          data: accessToken
-        }
+        return badRequest(accessToken)
       }
     } catch (err: any) {
-      return {
-        statusCode: 500,
-        data: new ServerError(err)
-      }
+      return serverError(err)
     }
   }
 

@@ -33,7 +33,7 @@ describe('SignupController', () => {
   })
 
   it('should returns 400 if no name is provided', async () => {
-    const httpResponse = await sut.handle({ email, password, passwordConfirmation })
+    const httpResponse = await sut.handle({ name: undefined as any, email, password, passwordConfirmation })
 
     expect(httpResponse).toEqual({
       statusCode: 400,
@@ -42,7 +42,7 @@ describe('SignupController', () => {
   })
 
   it('should returns 400 if no email is provided', async () => {
-    const httpResponse = await sut.handle({ name, password, passwordConfirmation })
+    const httpResponse = await sut.handle({ name, email: undefined as any, password, passwordConfirmation })
 
     expect(httpResponse).toEqual({
       statusCode: 400,
@@ -68,7 +68,7 @@ describe('SignupController', () => {
   })
 
   it('should returns 400 if no password is provided', async () => {
-    const httpResponse = await sut.handle({ name, email, passwordConfirmation })
+    const httpResponse = await sut.handle({ name, email, password: undefined as any, passwordConfirmation })
 
     expect(httpResponse).toEqual({
       statusCode: 400,
@@ -77,7 +77,7 @@ describe('SignupController', () => {
   })
 
   it('should returns 400 if no passwordConfirmation is provided', async () => {
-    const httpResponse = await sut.handle({ name, email, password })
+    const httpResponse = await sut.handle({ name, email, password, passwordConfirmation: undefined as any })
 
     expect(httpResponse).toEqual({
       statusCode: 400,
