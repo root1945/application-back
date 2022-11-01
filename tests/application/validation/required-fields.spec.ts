@@ -26,4 +26,12 @@ describe('RequiredFields', () => {
 
     expect(error).toEqual(new MissingParamError('any_field'))
   })
+
+  it('should return undefined if all required fields are provided', () => {
+    const sut = new RequiredFields(['any_field'])
+
+    const error = sut.validate({ any_field: 'any_value' })
+
+    expect(error).toBeUndefined()
+  })
 })
