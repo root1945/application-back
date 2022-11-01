@@ -1,4 +1,4 @@
-import { EmailValidator, RequiredFieldsValidation } from '@/application/validation'
+import { EmailValidator, RequiredFieldsValidation, CompareFieldsValidation } from '@/application/validation'
 import { AddAccount } from '@/domain/features'
 import { HttpRequest, HttpResponse } from '@/application/helpers'
 import { ServerError, InvalidParamError } from '@/application/errors'
@@ -20,14 +20,8 @@ export class SignupController {
         }
       }
 
-      const { name, email, password, passwordConfirmation } = httpRequest
+      const { name, email, password } = httpRequest
 
-      if (password !== passwordConfirmation) {
-        return {
-          statusCode: 400,
-          data: new Error('Invalid param: passwordConfirmation')
-        }
-      }
       const accessToken = await this.addAccount.perform({ name, email, password })
       if (accessToken instanceof AccessToken){
         return {
@@ -52,13 +46,19 @@ export class SignupController {
 
   validate (httpRequest: HttpRequest): Error | undefined {
     const requiredFields = ['name', 'email', 'password', 'passwordConfirmation']
-    const error = new RequiredFieldsValidation(requiredFields).validate(httpRequest)
+    const requiredFieldsValidation = new RequiredFieldsValidation(requiredFields)
+    const error = requiredFieldsValidation.validate(httpRequest)
     if (error) {
       return error
     }
-    const isValid = this.emailValidator.isValid(httpRequest.email)
-    if (!isValid) {
+    const { email } = httpRequest
+    if (!this.emailValidator.isValid(email)) {
       return new InvalidParamError('email')
+    }
+    const { password, passwordConfirmation } = httpRequest
+    const compareFieldsValidation = new CompareFieldsValidation('password', 'passwordConfirmation')
+    if (compareFieldsValidation.validate({ password, passwordConfirmation })) {
+      return new InvalidParamError('passwordConfirmation')
     }
   }
 }
