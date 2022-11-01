@@ -1,94 +1,11 @@
 import { faker } from '@faker-js/faker'
-import { EmailValidator } from '@/application/validation'
 import { mock, MockProxy } from 'jest-mock-extended'
 import { AddAccount } from '@/domain/features'
 import { AccessToken } from '@/domain/models'
 import { RegistrationError } from '@/domain/errors'
-
-type HttpRequest = any
-
-type HttpResponse = {
-  statusCode: number
-  data: any
-}
-
-class ServerError extends Error {
-  constructor (err?: Error) {
-    super('Internal server error')
-    this.name = 'ServerError'
-    this.stack = err?.stack
-  }
-}
-
-class SignupController {
-  constructor (
-    private readonly emailValidator: EmailValidator,
-    private readonly addAccount: AddAccount
-  ) {}
-
-  async handle (httpRequest: HttpRequest): Promise<HttpResponse> {
-    try {
-      const { name, email, password, passwordConfirmation } = httpRequest
-      if (!name) {
-        return {
-          statusCode: 400,
-          data: new Error('Missing param: name')
-        }
-      }
-      if (!email) {
-        return {
-          statusCode: 400,
-          data: new Error('Missing param: email')
-        }
-      }
-      const isValid = this.emailValidator.isValid(email)
-      if (!isValid) {
-        return {
-          statusCode: 400,
-          data: new Error('Invalid param: email')
-        }
-      }
-      if (!password) {
-        return {
-          statusCode: 400,
-          data: new Error('Missing param: password')
-        }
-      }
-      if (!passwordConfirmation) {
-        return {
-          statusCode: 400,
-          data: new Error('Missing param: passwordConfirmation')
-        }
-      }
-
-      if (password !== passwordConfirmation) {
-        return {
-          statusCode: 400,
-          data: new Error('Invalid param: passwordConfirmation')
-        }
-      }
-      const accessToken = await this.addAccount.perform({ name, email, password })
-      if (accessToken instanceof AccessToken){
-        return {
-          statusCode: 200,
-          data: {
-            accessToken: accessToken.value
-          }
-        }
-      } else {
-        return {
-          statusCode: 400,
-          data: accessToken
-        }
-      }
-    } catch (err: any) {
-      return {
-        statusCode: 500,
-        data: new ServerError(err)
-      }
-    }
-  }
-}
+import { SignupController } from '@/application/controllers'
+import { EmailValidator } from '@/application/validation'
+import { ServerError } from '@/application/errors'
 
 describe('SignupController', () => {
   let sut: SignupController
