@@ -1,12 +1,6 @@
-import { EmailValidator } from '@/application/contracts'
+import { EmailValidatorAdapter } from '@/utils'
 import { faker } from '@faker-js/faker'
 import validator from 'validator'
-
-class EmailValidatorAdapter implements EmailValidator {
-  isValid (email: string): boolean {
-    return validator.isEmail(email)
-  }
-}
 
 describe('EmailValidatorAdapter', () => {
   let sut: EmailValidatorAdapter
