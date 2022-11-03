@@ -1,8 +1,9 @@
-import { EmailValidator, RequiredFieldsValidation, CompareFieldsValidation } from '@/application/validation'
+import { RequiredFieldsValidation, CompareFieldsValidation } from '@/application/validation'
 import { AddAccount } from '@/domain/features'
 import { HttpResponse, badRequest, ok, serverError } from '@/application/helpers'
 import { InvalidParamError } from '@/application/errors'
 import { AccessToken } from '@/domain/models'
+import { EmailValidator } from '@/application/contracts'
 
 type HttpRequest = {
   name: string

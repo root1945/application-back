@@ -4,7 +4,7 @@ import { AddAccount } from '@/domain/features'
 import { AccessToken } from '@/domain/models'
 import { RegistrationError } from '@/domain/errors'
 import { SignupController } from '@/application/controllers'
-import { EmailValidator } from '@/application/validation'
+import { EmailValidator } from '@/application/contracts'
 import { ServerError } from '@/application/errors'
 
 describe('SignupController', () => {
