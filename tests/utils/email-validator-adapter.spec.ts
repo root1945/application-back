@@ -10,6 +10,11 @@ class EmailValidatorAdapter implements EmailValidator {
 
 describe('EmailValidatorAdapter', () => {
   let sut: EmailValidatorAdapter
+  let email: string
+
+  beforeEach(() => {
+    email = faker.internet.email()
+  })
 
   beforeAll(() => {
     sut = new EmailValidatorAdapter()
@@ -22,8 +27,16 @@ describe('EmailValidatorAdapter', () => {
   })
 
   it('should returns true if validator returns true', () => {
-    const isValid = sut.isValid(faker.internet.email())
+    const isValid = sut.isValid(email)
 
     expect(isValid).toBe(true)
+  })
+
+  it('should call validator with correct email', () => {
+    const isEmailSpy = jest.spyOn(validator, 'isEmail')
+
+    sut.isValid(email)
+
+    expect(isEmailSpy).toHaveBeenCalledWith(email)
   })
 })
