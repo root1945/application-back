@@ -22,6 +22,7 @@ describe('EmailValidation', () => {
 
   beforeAll(() => {
     emailValidator = mock()
+    emailValidator.isValid.mockReturnValue(true)
   })
 
   beforeEach(() => {
@@ -41,5 +42,11 @@ describe('EmailValidation', () => {
     const error = sut.validate()
 
     expect(error).toEqual(new InvalidParamError('email'))
+  })
+
+  it('should return undefined if EmailValidator returns true', () => {
+    const error = sut.validate()
+
+    expect(error).toBeUndefined()
   })
 })
