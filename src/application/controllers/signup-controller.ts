@@ -1,7 +1,8 @@
-import { ValidationComposite, ValidationBuilder } from '@/application/validation'
+import { ValidationBuilder as Builder, Validator } from '@/application/validation'
 import { AddAccount } from '@/domain/features'
-import { HttpResponse, badRequest, ok, serverError } from '@/application/helpers'
+import { HttpResponse, badRequest, ok } from '@/application/helpers'
 import { AccessToken } from '@/domain/models'
+import { Controller } from '@/application/controllers'
 
 type HttpRequest = {
   name: string
@@ -14,32 +15,22 @@ type Model = Error | {
   accessToken: string
 }
 
-export class SignupController {
-  constructor (
-    private readonly addAccount: AddAccount
-  ) {}
-
-  async handle (httpRequest: HttpRequest): Promise<HttpResponse<Model>> {
-    try {
-      const error = this.validate(httpRequest)
-      if (error) return badRequest(error)
-      const { name, email, password } = httpRequest
-      const accessToken = await this.addAccount.perform({ name, email, password })
-      if (accessToken instanceof AccessToken){
-        return ok({ accessToken: accessToken.value })
-      } else {
-        return badRequest(accessToken)
-      }
-    } catch (err: any) {
-      return serverError(err)
-    }
+export class SignupController extends Controller {
+  constructor (private readonly addAccount: AddAccount) {
+    super()
   }
 
-  validate (httpRequest: HttpRequest): Error | undefined {
-    return new ValidationComposite([
-      ...ValidationBuilder.of({ value: httpRequest, fieldNames: ['name', 'email', 'password', 'passwordConfirmation'] }).required().build(),
-      ...ValidationBuilder.of({ value: httpRequest, fieldName: 'email' }).isValidEmail().build(),
-      ...ValidationBuilder.of({ value: httpRequest, fieldName: 'password', fieldNameToCompare: 'passwordConfirmation' }).compare().build()
-    ]).validate()
+  async perform (httpRequest: HttpRequest): Promise<HttpResponse<Model>> {
+    const { name, email, password } = httpRequest
+    const accessToken = await this.addAccount.perform({ name, email, password })
+    return accessToken instanceof AccessToken ? ok({ accessToken: accessToken.value }) : badRequest(accessToken)
+  }
+
+  override buildValidators (httpRequest: HttpRequest): Validator[] {
+    return [
+      ...Builder.of({ value: httpRequest, fieldNames: ['name', 'email', 'password', 'passwordConfirmation'] }).required().build(),
+      ...Builder.of({ value: httpRequest, fieldName: 'email' }).isValidEmail().build(),
+      ...Builder.of({ value: httpRequest, fieldName: 'password', fieldNameToCompare: 'passwordConfirmation' }).compare().build()
+    ]
   }
 }

@@ -5,6 +5,8 @@ import { AccessToken } from '@/domain/models'
 import { RegistrationError } from '@/domain/errors'
 import { SignupController } from '@/application/controllers'
 import { ServerError } from '@/application/errors'
+import { CompareFieldsValidation, EmailValidation, RequiredFieldsValidation } from '@/application/validation'
+import { EmailValidatorAdapter } from '@/utils'
 
 describe('SignupController', () => {
   let sut: SignupController
@@ -26,6 +28,17 @@ describe('SignupController', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     sut = new SignupController(addAccount)
+  })
+
+  it('should build validators correctly', () => {
+    const input = { name, email, password, passwordConfirmation }
+    const validators = sut.buildValidators(input)
+
+    expect(validators).toEqual([
+      new RequiredFieldsValidation(input, ['name', 'email', 'password', 'passwordConfirmation']),
+      new EmailValidation(input.email, new EmailValidatorAdapter()),
+      new CompareFieldsValidation(input, 'password', 'passwordConfirmation')
+    ])
   })
 
   it('should call AddAccount with correct values', async () => {
