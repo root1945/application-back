@@ -51,4 +51,13 @@ describe('ValidationComposite', () => {
 
     expect(error).toBe(error1)
   })
+
+  it('should return the error', () => {
+    const error = new Error('error')
+    validator1.validate.mockReturnValueOnce(error)
+
+    const result = sut.validate()
+
+    expect(result).toBe(error)
+  })
 })
