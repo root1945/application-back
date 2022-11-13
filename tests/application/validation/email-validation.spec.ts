@@ -1,20 +1,8 @@
 import { EmailValidator } from '@/application/contracts'
+import { InvalidParamError } from '@/application/errors'
+import { EmailValidation } from '@/application/validation'
 
 import { mock, MockProxy } from 'jest-mock-extended'
-import { InvalidParamError } from '@/application/errors'
-
-class EmailValidation {
-  constructor (
-    private readonly value: string,
-    private readonly emailValidator: EmailValidator
-  ) {}
-
-  validate (): Error | undefined {
-    if (!this.emailValidator.isValid(this.value)) {
-      return new InvalidParamError('email')
-    }
-  }
-}
 
 describe('EmailValidation', () => {
   let emailValidator: MockProxy<EmailValidator>
