@@ -11,38 +11,32 @@ describe('ValidationBuilder', () => {
   })
 
   it('should return RequiredFieldsValidation', () => {
-    const validators = ValidationBuilder
-      .of({
-        value: {
-          any_field: 'any_value'
-        }
-      })
-      .required(['any_field'])
+    const input = { name: faker.name.firstName(), email, password: faker.internet.password(), passwordConfirmation: faker.internet.password() }
+    const validations = ValidationBuilder
+      .of({ value: input, fieldNames: ['name', 'email', 'password', 'passwordConfirmation'] })
+      .required()
       .build()
 
-    expect(validators).toEqual([new RequiredFieldsValidation({ any_field: 'any_value' }, ['any_field'])])
+    expect(validations).toEqual([new RequiredFieldsValidation(input, ['name', 'email', 'password', 'passwordConfirmation'])])
   })
 
   it('should return CompareFieldsValidation', () => {
-    const validators = ValidationBuilder
-      .of({
-        value: {
-          field: 'any_value',
-          fieldToCompare: 'any_value'
-        }
-      })
-      .compare('field', 'fieldToCompare')
+    const input = { password: faker.internet.password(), passwordConfirmation: faker.internet.password() }
+    const validations = ValidationBuilder
+      .of({ value: input, fieldName: 'password', fieldNameToCompare: 'passwordConfirmation' })
+      .compare()
       .build()
 
-    expect(validators).toEqual([new CompareFieldsValidation({ field: 'any_value', fieldToCompare: 'any_value' }, 'field', 'fieldToCompare')])
+    expect(validations).toEqual([new CompareFieldsValidation(input, 'password', 'passwordConfirmation')])
   })
 
   it('should return EmailValidation', () => {
-    const validators = ValidationBuilder
-      .of({ value: { email } })
-      .isValidEmail('email')
+    const input = { email }
+    const validations = ValidationBuilder
+      .of({ value: input, fieldName: 'email' })
+      .isValidEmail()
       .build()
 
-    expect(validators).toEqual([new EmailValidation(email, new EmailValidatorAdapter())])
+    expect(validations).toEqual([new EmailValidation(input.email, new EmailValidatorAdapter())])
   })
 })

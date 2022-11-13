@@ -4,15 +4,10 @@ import { AddAccount } from '@/domain/features'
 import { AccessToken } from '@/domain/models'
 import { RegistrationError } from '@/domain/errors'
 import { SignupController } from '@/application/controllers'
-import { EmailValidator } from '@/application/contracts'
 import { ServerError } from '@/application/errors'
-import { RequiredFieldsValidation } from '@/application/validation'
-
-jest.mock('@/application/validation/required-fields')
 
 describe('SignupController', () => {
   let sut: SignupController
-  let emailValidator: MockProxy<EmailValidator>
   let addAccount: MockProxy<AddAccount>
   let name: string
   let email: string
@@ -20,8 +15,6 @@ describe('SignupController', () => {
   let passwordConfirmation: string
 
   beforeAll(() => {
-    emailValidator = mock()
-    emailValidator.isValid.mockReturnValue(true)
     addAccount = mock()
     addAccount.perform.mockResolvedValue(new AccessToken('any_token'))
     name = faker.name.firstName()
@@ -32,20 +25,7 @@ describe('SignupController', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    sut = new SignupController(emailValidator, addAccount)
-  })
-
-  it('should returns 400 if validation fails', async () => {
-    const error = new Error('validation_error')
-    jest.spyOn(RequiredFieldsValidation.prototype, 'validate').mockReturnValueOnce(error)
-
-    const httpResponse = await sut.handle({ name, email, password, passwordConfirmation })
-
-    expect(RequiredFieldsValidation).toHaveBeenCalledWith(['name', 'email', 'password', 'passwordConfirmation'])
-    expect(httpResponse).toEqual({
-      statusCode: 400,
-      data: error
-    })
+    sut = new SignupController(addAccount)
   })
 
   it('should call AddAccount with correct values', async () => {

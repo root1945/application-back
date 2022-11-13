@@ -1,9 +1,7 @@
-import { RequiredFieldsValidation, CompareFieldsValidation } from '@/application/validation'
+import { ValidationComposite, ValidationBuilder } from '@/application/validation'
 import { AddAccount } from '@/domain/features'
 import { HttpResponse, badRequest, ok, serverError } from '@/application/helpers'
-import { InvalidParamError } from '@/application/errors'
 import { AccessToken } from '@/domain/models'
-import { EmailValidator } from '@/application/contracts'
 
 type HttpRequest = {
   name: string
@@ -18,7 +16,6 @@ type Model = Error | {
 
 export class SignupController {
   constructor (
-    private readonly emailValidator: EmailValidator,
     private readonly addAccount: AddAccount
   ) {}
 
@@ -39,20 +36,10 @@ export class SignupController {
   }
 
   validate (httpRequest: HttpRequest): Error | undefined {
-    const requiredFields = ['name', 'email', 'password', 'passwordConfirmation']
-    const requiredFieldsValidation = new RequiredFieldsValidation(requiredFields)
-    const error = requiredFieldsValidation.validate(httpRequest)
-    if (error) {
-      return error
-    }
-    const { email } = httpRequest
-    if (!this.emailValidator.isValid(email)) {
-      return new InvalidParamError('email')
-    }
-    const { password, passwordConfirmation } = httpRequest
-    const compareFieldsValidation = new CompareFieldsValidation('password', 'passwordConfirmation')
-    if (compareFieldsValidation.validate({ password, passwordConfirmation })) {
-      return new InvalidParamError('passwordConfirmation')
-    }
+    return new ValidationComposite([
+      ...ValidationBuilder.of({ value: httpRequest, fieldNames: ['name', 'email', 'password', 'passwordConfirmation'] }).required().build(),
+      ...ValidationBuilder.of({ value: httpRequest, fieldName: 'email' }).isValidEmail().build(),
+      ...ValidationBuilder.of({ value: httpRequest, fieldName: 'password', fieldNameToCompare: 'passwordConfirmation' }).compare().build()
+    ]).validate()
   }
 }
