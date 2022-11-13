@@ -26,7 +26,7 @@ export class SignupController extends Controller {
     return accessToken instanceof AccessToken ? ok({ accessToken: accessToken.value }) : badRequest(accessToken)
   }
 
-  override buildValidators (httpRequest: HttpRequest): Validator[] {
+  override buildValidators (httpRequest: any): Validator[] {
     return [
       ...Builder.of({ value: httpRequest, fieldNames: ['name', 'email', 'password', 'passwordConfirmation'] }).required().build(),
       ...Builder.of({ value: httpRequest, fieldName: 'email' }).isValidEmail().build(),
