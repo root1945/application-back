@@ -6,6 +6,9 @@ import { RegistrationError } from '@/domain/errors'
 import { SignupController } from '@/application/controllers'
 import { EmailValidator } from '@/application/contracts'
 import { ServerError } from '@/application/errors'
+import { RequiredFieldsValidation } from '@/application/validation'
+
+jest.mock('@/application/validation/required-fields')
 
 describe('SignupController', () => {
   let sut: SignupController
@@ -32,65 +35,16 @@ describe('SignupController', () => {
     sut = new SignupController(emailValidator, addAccount)
   })
 
-  it('should returns 400 if no name is provided', async () => {
-    const httpResponse = await sut.handle({ name: undefined as any, email, password, passwordConfirmation })
+  it('should returns 400 if validation fails', async () => {
+    const error = new Error('validation_error')
+    jest.spyOn(RequiredFieldsValidation.prototype, 'validate').mockReturnValueOnce(error)
 
-    expect(httpResponse).toEqual({
-      statusCode: 400,
-      data: new Error('Missing param: name')
-    })
-  })
-
-  it('should returns 400 if no email is provided', async () => {
-    const httpResponse = await sut.handle({ name, email: undefined as any, password, passwordConfirmation })
-
-    expect(httpResponse).toEqual({
-      statusCode: 400,
-      data: new Error('Missing param: email')
-    })
-  })
-
-  it('should call EmailValidator with correct email', async () => {
-    await sut.handle({ name, email, password, passwordConfirmation })
-
-    expect(emailValidator.isValid).toHaveBeenCalledWith(email)
-    expect(emailValidator.isValid).toHaveBeenCalledTimes(1)
-  })
-
-  it('should returns 400 if email is invalid', async () => {
-    emailValidator.isValid.mockReturnValueOnce(false)
     const httpResponse = await sut.handle({ name, email, password, passwordConfirmation })
 
+    expect(RequiredFieldsValidation).toHaveBeenCalledWith(['name', 'email', 'password', 'passwordConfirmation'])
     expect(httpResponse).toEqual({
       statusCode: 400,
-      data: new Error('Invalid param: email')
-    })
-  })
-
-  it('should returns 400 if no password is provided', async () => {
-    const httpResponse = await sut.handle({ name, email, password: undefined as any, passwordConfirmation })
-
-    expect(httpResponse).toEqual({
-      statusCode: 400,
-      data: new Error('Missing param: password')
-    })
-  })
-
-  it('should returns 400 if no passwordConfirmation is provided', async () => {
-    const httpResponse = await sut.handle({ name, email, password, passwordConfirmation: undefined as any })
-
-    expect(httpResponse).toEqual({
-      statusCode: 400,
-      data: new Error('Missing param: passwordConfirmation')
-    })
-  })
-
-  it('should returns 400 if passwordConfirmation fails', async () => {
-    const httpResponse = await sut.handle({ name, email, password, passwordConfirmation: faker.internet.password() })
-
-    expect(httpResponse).toEqual({
-      statusCode: 400,
-      data: new Error('Invalid param: passwordConfirmation')
+      data: error
     })
   })
 
