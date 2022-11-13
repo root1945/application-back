@@ -1,4 +1,7 @@
-import { RequiredFieldsValidation, Validator, CompareFieldsValidation } from '@/application/validation'
+import { RequiredFieldsValidation, Validator, CompareFieldsValidation, EmailValidation } from '@/application/validation'
+import { EmailValidatorAdapter } from '@/utils'
+
+import { faker } from '@faker-js/faker'
 
 class ValidationBuilder {
   private constructor (
@@ -20,12 +23,23 @@ class ValidationBuilder {
     return this
   }
 
+  isValidEmail (fieldName: string): ValidationBuilder {
+    this.validations.push(new EmailValidation(this.value[fieldName], new EmailValidatorAdapter()))
+    return this
+  }
+
   build (): Validator[] {
     return this.validations
   }
 }
 
 describe('ValidationBuilder', () => {
+  let email: string
+
+  beforeAll(() => {
+    email = faker.internet.email()
+  })
+
   it('should return RequiredFieldsValidation', () => {
     const validators = ValidationBuilder
       .of({
@@ -51,5 +65,14 @@ describe('ValidationBuilder', () => {
       .build()
 
     expect(validators).toEqual([new CompareFieldsValidation({ field: 'any_value', fieldToCompare: 'any_value' }, 'field', 'fieldToCompare')])
+  })
+
+  it('should return EmailValidation', () => {
+    const validators = ValidationBuilder
+      .of({ value: { email } })
+      .isValidEmail('email')
+      .build()
+
+    expect(validators).toEqual([new EmailValidation(email, new EmailValidatorAdapter())])
   })
 })
