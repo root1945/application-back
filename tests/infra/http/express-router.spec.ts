@@ -8,7 +8,9 @@ class ExpressRouter {
 
   async adapt (req: Request, res: Response): Promise<void> {
     const httpResponse = await this.controller.handle({ ...req.body })
-    res.status(httpResponse.statusCode).json(httpResponse.data)
+    httpResponse.statusCode === 200
+      ? res.status(httpResponse.statusCode).json(httpResponse.data)
+      : res.status(httpResponse.statusCode).json({ error: httpResponse.data.message })
   }
 }
 
@@ -50,6 +52,34 @@ describe('ExpressRouter', () => {
 
     expect(res.status).toHaveBeenCalledWith(200)
     expect(res.json).toHaveBeenCalledWith('any_data')
+    expect(res.status).toHaveBeenCalledTimes(1)
+    expect(res.json).toHaveBeenCalledTimes(1)
+  })
+
+  it('should response with 400 and valid error', async () => {
+    controller.handle.mockResolvedValueOnce({
+      statusCode: 400,
+      data: new Error('any_error')
+    })
+
+    await sut.adapt(req, res)
+
+    expect(res.status).toHaveBeenCalledWith(400)
+    expect(res.json).toHaveBeenCalledWith({ error: 'any_error' })
+    expect(res.status).toHaveBeenCalledTimes(1)
+    expect(res.json).toHaveBeenCalledTimes(1)
+  })
+
+  it('should response with 500 and valid error', async () => {
+    controller.handle.mockResolvedValueOnce({
+      statusCode: 500,
+      data: new Error('any_error')
+    })
+
+    await sut.adapt(req, res)
+
+    expect(res.status).toHaveBeenCalledWith(500)
+    expect(res.json).toHaveBeenCalledWith({ error: 'any_error' })
     expect(res.status).toHaveBeenCalledTimes(1)
     expect(res.json).toHaveBeenCalledTimes(1)
   })
