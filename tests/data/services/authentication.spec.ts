@@ -2,43 +2,10 @@ import { mock, MockProxy } from 'jest-mock-extended'
 import { faker } from '@faker-js/faker'
 
 import { LoadUserAccountRepository } from '@/data/contracts/repos'
-import { Authentication } from '@/domain/features'
 import { AuthenticationError } from '@/domain/errors'
-import { TokenGenerator } from '@/data/contracts/crypto'
+import { TokenGenerator, CompareHash } from '@/data/contracts/crypto'
 import { AccessToken } from '@/domain/models'
-
-interface CompareHash {
-  compare: (params: CompareHash.Params) => Promise<CompareHash.Result>
-}
-
-namespace CompareHash {
-  export type Params = {
-    value: string
-    hash: string
-  }
-  export type Result = boolean
-}
-
-class AuthenticationService implements Authentication {
-  constructor (
-    private readonly userAccountRepo: LoadUserAccountRepository,
-    private readonly hasher: CompareHash,
-    private readonly tokenGenerator: TokenGenerator
-  ) {}
-
-  async perform (params: Authentication.Params): Promise<Authentication.Result> {
-    const account = await this.userAccountRepo.load({ email: params.email })
-    if (!account) {
-      return new AuthenticationError()
-    }
-    const isValid = await this.hasher.compare({ value: params.password, hash: account.password })
-    if (!isValid) {
-      return new AuthenticationError()
-    }
-    const accessToken = await this.tokenGenerator.generate({ key: account.id, expirationInMs: AccessToken.expirationInMs })
-    return new AccessToken(accessToken)
-  }
-}
+import { AuthenticationService } from '@/data/services'
 
 describe('AuthenticationService', () => {
   let sut: AuthenticationService
