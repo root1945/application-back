@@ -128,4 +128,12 @@ describe('AuthenticationService', () => {
 
     await expect(promise).rejects.toThrow(new Error('repo_error'))
   })
+
+  it('should rethrow if compare throws', async () => {
+    compareHash.compare.mockRejectedValueOnce(new Error('hasher_error'))
+
+    const promise = sut.perform({ email, password })
+
+    await expect(promise).rejects.toThrow(new Error('hasher_error'))
+  })
 })
