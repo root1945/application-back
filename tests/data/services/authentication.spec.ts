@@ -19,22 +19,24 @@ namespace CompareHash {
   export type Result = boolean
 }
 
-class AuthenticationService {
+class AuthenticationService implements Authentication {
   constructor (
     private readonly userAccountRepo: LoadUserAccountRepository,
     private readonly hasher: CompareHash,
     private readonly tokenGenerator: TokenGenerator
   ) {}
 
-  async perform (params: Authentication.Params): Promise<AuthenticationError> {
-    const user = await this.userAccountRepo.load({ email: params.email })
-    if (user) {
-      const isValid = await this.hasher.compare({ value: params.password, hash: user.password })
-      if (isValid) {
-        await this.tokenGenerator.generate({ key: user.id, expirationInMs: AccessToken.expirationInMs })
-      }
+  async perform (params: Authentication.Params): Promise<Authentication.Result> {
+    const account = await this.userAccountRepo.load({ email: params.email })
+    if (!account) {
+      return new AuthenticationError()
     }
-    return new AuthenticationError()
+    const isValid = await this.hasher.compare({ value: params.password, hash: account.password })
+    if (!isValid) {
+      return new AuthenticationError()
+    }
+    const accessToken = await this.tokenGenerator.generate({ key: account.id, expirationInMs: AccessToken.expirationInMs })
+    return new AccessToken(accessToken)
   }
 }
 
@@ -47,12 +49,14 @@ describe('AuthenticationService', () => {
   let email: string
   let password: string
   let hashedPassword: string
+  let accessToken: string
 
   beforeAll(() => {
     id = faker.datatype.uuid()
     email = faker.internet.email()
     password = faker.internet.password()
     hashedPassword = faker.internet.password()
+    accessToken = faker.datatype.uuid()
     loadUserAccountRepo = mock()
     loadUserAccountRepo.load.mockResolvedValue({
       id,
@@ -63,6 +67,7 @@ describe('AuthenticationService', () => {
     compareHash = mock()
     compareHash.compare.mockResolvedValue(true)
     tokenGenerator = mock()
+    tokenGenerator.generate.mockResolvedValue(accessToken)
   })
 
   beforeEach(() => {
@@ -108,5 +113,11 @@ describe('AuthenticationService', () => {
 
     expect(tokenGenerator.generate).toHaveBeenCalledWith({ key: id, expirationInMs: 1800000 })
     expect(tokenGenerator.generate).toHaveBeenCalledTimes(1)
+  })
+
+  it('should return accessToken on success', async () => {
+    const result = await sut.perform({ email, password })
+
+    expect(result).toEqual(new AccessToken(accessToken))
   })
 })
