@@ -4,6 +4,8 @@ import { faker } from '@faker-js/faker'
 import { LoadUserAccountRepository } from '@/data/contracts/repos'
 import { Authentication } from '@/domain/features'
 import { AuthenticationError } from '@/domain/errors'
+import { TokenGenerator } from '@/data/contracts/crypto'
+import { AccessToken } from '@/domain/models'
 
 interface CompareHash {
   compare: (params: CompareHash.Params) => Promise<CompareHash.Result>
@@ -20,13 +22,15 @@ namespace CompareHash {
 class AuthenticationService {
   constructor (
     private readonly userAccountRepo: LoadUserAccountRepository,
-    private readonly hasher: CompareHash
+    private readonly hasher: CompareHash,
+    private readonly tokenGenerator: TokenGenerator
   ) {}
 
   async perform (params: Authentication.Params): Promise<AuthenticationError> {
     const user = await this.userAccountRepo.load({ email: params.email })
     if (user) {
       await this.hasher.compare({ value: params.password, hash: user.password })
+      await this.tokenGenerator.generate({ key: user.id, expirationInMs: AccessToken.expirationInMs })
     }
     return new AuthenticationError()
   }
@@ -36,27 +40,31 @@ describe('AuthenticationService', () => {
   let sut: AuthenticationService
   let loadUserAccountRepo: MockProxy<LoadUserAccountRepository>
   let compareHash: MockProxy<CompareHash>
+  let tokenGenerator: MockProxy<TokenGenerator>
+  let id: string
   let email: string
   let password: string
   let hashedPassword: string
 
   beforeAll(() => {
+    id = faker.datatype.uuid()
     email = faker.internet.email()
     password = faker.internet.password()
     hashedPassword = faker.internet.password()
     loadUserAccountRepo = mock()
     loadUserAccountRepo.load.mockResolvedValue({
-      id: faker.datatype.uuid(),
+      id,
       name: faker.name.firstName(),
       email,
       password: hashedPassword
     })
     compareHash = mock()
+    tokenGenerator = mock()
   })
 
   beforeEach(() => {
     jest.clearAllMocks()
-    sut = new AuthenticationService(loadUserAccountRepo, compareHash)
+    sut = new AuthenticationService(loadUserAccountRepo, compareHash, tokenGenerator)
   })
 
   it('should call LoadUserAccountRepo with correct values', async () => {
@@ -82,5 +90,12 @@ describe('AuthenticationService', () => {
       hash: hashedPassword
     })
     expect(compareHash.compare).toHaveBeenCalledTimes(1)
+  })
+
+  it('should call TokenGenerator with correct params', async () => {
+    await sut.perform({ email, password })
+
+    expect(tokenGenerator.generate).toHaveBeenCalledWith({ key: id, expirationInMs: 1800000 })
+    expect(tokenGenerator.generate).toHaveBeenCalledTimes(1)
   })
 })
