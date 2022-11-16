@@ -136,4 +136,12 @@ describe('AuthenticationService', () => {
 
     await expect(promise).rejects.toThrow(new Error('hasher_error'))
   })
+
+  it('should rethrow if TokenGenerator throws', async () => {
+    tokenGenerator.generate.mockRejectedValueOnce(new Error('token_generator_error'))
+
+    const promise = sut.perform({ email, password })
+
+    await expect(promise).rejects.toThrow(new Error('token_generator_error'))
+  })
 })
