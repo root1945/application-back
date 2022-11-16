@@ -10,7 +10,8 @@ import { faker } from '@faker-js/faker'
 describe('AddAccountService', () => {
   let sut: AddAccountService
   let userAccountRepo: MockProxy<LoadUserAccountRepository & SaveUserAccountRepo>
-  let hasher: MockProxy<Hasher & TokenGenerator>
+  let hasher: MockProxy<Hasher>
+  let tokenGenerator: MockProxy<TokenGenerator>
   let id: string
   let name: string
   let email: string
@@ -26,12 +27,13 @@ describe('AddAccountService', () => {
     userAccountRepo.saveWithAccount.mockResolvedValue({ id, name, email, password })
     hasher = mock()
     hasher.hash.mockResolvedValue('hashed_password')
-    hasher.generate.mockResolvedValue('generated_token')
+    tokenGenerator = mock()
+    tokenGenerator.generate.mockResolvedValue('generated_token')
   })
 
   beforeEach(() => {
     jest.clearAllMocks()
-    sut = new AddAccountService(userAccountRepo, hasher)
+    sut = new AddAccountService(userAccountRepo, hasher, tokenGenerator)
   })
 
   it('should call LoadUserAccountRepo with correct params', async () => {
@@ -66,8 +68,8 @@ describe('AddAccountService', () => {
   it('should call TokenGenerator with correct params', async () => {
     await sut.perform({ name, email, password })
 
-    expect(hasher.generate).toHaveBeenCalledWith({ key: id, expirationInMs: 1800000 })
-    expect(hasher.generate).toHaveBeenCalledTimes(1)
+    expect(tokenGenerator.generate).toHaveBeenCalledWith({ key: id, expirationInMs: 1800000 })
+    expect(tokenGenerator.generate).toHaveBeenCalledTimes(1)
   })
 
   it('Should return accessToken on success', async () => {
@@ -101,7 +103,7 @@ describe('AddAccountService', () => {
   })
 
   it('Should rethrow if TokenGenerator throws', async () => {
-    hasher.generate.mockRejectedValueOnce(new Error('token_generator_error'))
+    tokenGenerator.generate.mockRejectedValueOnce(new Error('token_generator_error'))
 
     const promise = sut.perform({ name, email, password })
 

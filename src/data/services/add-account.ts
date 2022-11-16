@@ -7,7 +7,8 @@ import { AccessToken } from '@/domain/models'
 export class AddAccountService implements AddAccount {
   constructor (
     private readonly userAccountRepo: LoadUserAccountRepository & SaveUserAccountRepo,
-    private readonly hasher: Hasher & TokenGenerator
+    private readonly hasher: Hasher,
+    private readonly tokenGenerator: TokenGenerator
   ) {}
 
   async perform (params: AddAccount.Params): Promise<AddAccount.Result> {
@@ -21,7 +22,7 @@ export class AddAccountService implements AddAccount {
       email: params.email,
       password: hashedPassword
     })
-    const accessToken = await this.hasher.generate({ key: userAccount.id, expirationInMs: AccessToken.expirationInMs })
+    const accessToken = await this.tokenGenerator.generate({ key: userAccount.id, expirationInMs: AccessToken.expirationInMs })
     return new AccessToken(accessToken)
   }
 }

@@ -6,5 +6,5 @@ import { adaptExpressRoute } from '@/infra/http'
 
 export default (router: Router): void => {
   const controller = makeSignUpController()
-  router.post('/signup', adaptExpressRoute(controller))
+  router.post('/api/signup', adaptExpressRoute(controller))
 }
