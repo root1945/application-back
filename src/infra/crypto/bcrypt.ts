@@ -1,7 +1,7 @@
 import { Hasher } from '@/data/contracts/crypto'
 import bcrypt from 'bcryptjs'
 
-export class Bcrypt {
+export class Bcrypt implements Hasher {
   constructor (
     private readonly salt: number
   ) {}
