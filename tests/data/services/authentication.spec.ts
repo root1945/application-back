@@ -3,14 +3,16 @@ import { faker } from '@faker-js/faker'
 
 import { LoadUserAccountRepository } from '@/data/contracts/repos'
 import { Authentication } from '@/domain/features'
+import { AuthenticationError } from '@/domain/errors'
 
 class AuthenticationService {
   constructor (
     private readonly userAccountRepo: LoadUserAccountRepository
   ) {}
 
-  async perform (params: Authentication.Params): Promise<void> {
+  async perform (params: Authentication.Params): Promise<AuthenticationError> {
     await this.userAccountRepo.load({ email: params.email })
+    return new AuthenticationError()
   }
 }
 
@@ -35,5 +37,13 @@ describe('AuthenticationService', () => {
 
     expect(loadUserAccountRepo.load).toHaveBeenCalledWith({ email })
     expect(loadUserAccountRepo.load).toHaveBeenCalledTimes(1)
+  })
+
+  it('should return AuthenticationError if LoadUserAccountRepo returns undefined', async () => {
+    loadUserAccountRepo.load.mockResolvedValueOnce(undefined)
+
+    const error = await sut.perform({ email, password }).catch(error => error)
+
+    expect(error).toEqual(new AuthenticationError())
   })
 })
