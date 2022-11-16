@@ -120,4 +120,12 @@ describe('AuthenticationService', () => {
 
     expect(result).toEqual(new AccessToken(accessToken))
   })
+
+  it('should rethrow if LoadUserAccountRepo throws', async () => {
+    loadUserAccountRepo.load.mockRejectedValueOnce(new Error('repo_error'))
+
+    const promise = sut.perform({ email, password })
+
+    await expect(promise).rejects.toThrow(new Error('repo_error'))
+  })
 })
