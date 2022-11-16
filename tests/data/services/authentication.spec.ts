@@ -29,8 +29,10 @@ class AuthenticationService {
   async perform (params: Authentication.Params): Promise<AuthenticationError> {
     const user = await this.userAccountRepo.load({ email: params.email })
     if (user) {
-      await this.hasher.compare({ value: params.password, hash: user.password })
-      await this.tokenGenerator.generate({ key: user.id, expirationInMs: AccessToken.expirationInMs })
+      const isValid = await this.hasher.compare({ value: params.password, hash: user.password })
+      if (isValid) {
+        await this.tokenGenerator.generate({ key: user.id, expirationInMs: AccessToken.expirationInMs })
+      }
     }
     return new AuthenticationError()
   }
@@ -59,6 +61,7 @@ describe('AuthenticationService', () => {
       password: hashedPassword
     })
     compareHash = mock()
+    compareHash.compare.mockResolvedValue(true)
     tokenGenerator = mock()
   })
 
@@ -90,6 +93,14 @@ describe('AuthenticationService', () => {
       hash: hashedPassword
     })
     expect(compareHash.compare).toHaveBeenCalledTimes(1)
+  })
+
+  it('should return AuthenticationError if compare returns false', async () => {
+    compareHash.compare.mockResolvedValueOnce(false)
+
+    const error = await sut.perform({ email, password }).catch(error => error)
+
+    expect(error).toEqual(new AuthenticationError())
   })
 
   it('should call TokenGenerator with correct params', async () => {
