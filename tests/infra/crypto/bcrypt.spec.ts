@@ -54,5 +54,13 @@ describe('Bcrypt', () => {
 
       expect(isValid).toBe(true)
     })
+
+    it('should return false when compare fails', async () => {
+      fakeBcrypt.compare.mockImplementationOnce(async () => await Promise.resolve(false))
+
+      const isValid = await sut.compare({ value: 'any_value', hash: 'any_hash' })
+
+      expect(isValid).toBe(false)
+    })
   })
 })

@@ -2,7 +2,7 @@ import { Hasher, CompareHash } from '@/data/contracts/crypto'
 
 import bcrypt from 'bcryptjs'
 
-export class Bcrypt implements Hasher {
+export class Bcrypt implements Hasher, CompareHash {
   constructor (
     private readonly salt: number
   ) {}
@@ -12,8 +12,8 @@ export class Bcrypt implements Hasher {
     return hash
   }
 
-  async compare (params: CompareHash.Params): Promise<boolean> {
-    await bcrypt.compare(params.value, params.hash)
-    return true
+  async compare (params: CompareHash.Params): Promise<CompareHash.Result> {
+    const isValid = await bcrypt.compare(params.value, params.hash)
+    return isValid
   }
 }
