@@ -19,3 +19,10 @@ export class InvalidParamError extends Error {
     this.name = 'InvalidParamError'
   }
 }
+
+export class UnauthorizedError extends Error {
+  constructor () {
+    super('Unauthorized')
+    this.name = 'UnauthorizedError'
+  }
+}
