@@ -39,4 +39,12 @@ describe('Bcrypt', () => {
       await expect(promise).rejects.toThrow()
     })
   })
+
+  describe('compare()', () => {
+    it('should call compare with correct values', async () => {
+      await sut.compare({ value: 'any_value', hash: 'any_hash' })
+
+      expect(fakeBcrypt.compare).toHaveBeenCalledWith('any_value', 'any_hash')
+    })
+  })
 })
