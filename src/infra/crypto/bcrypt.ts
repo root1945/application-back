@@ -12,7 +12,8 @@ export class Bcrypt implements Hasher {
     return hash
   }
 
-  async compare (params: CompareHash.Params): Promise<void> {
+  async compare (params: CompareHash.Params): Promise<boolean> {
     await bcrypt.compare(params.value, params.hash)
+    return true
   }
 }
