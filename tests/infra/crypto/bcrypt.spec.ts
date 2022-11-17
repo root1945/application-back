@@ -18,23 +18,25 @@ describe('Bcrypt', () => {
     sut = new Bcrypt(salt)
   })
 
-  it('should call hash with correct values', async () => {
-    await sut.hash({ value: 'any_value' })
+  describe('hash()', () => {
+    it('should call hash with correct values', async () => {
+      await sut.hash({ value: 'any_value' })
 
-    expect(fakeBcrypt.hash).toHaveBeenCalledWith('any_value', salt)
-  })
+      expect(fakeBcrypt.hash).toHaveBeenCalledWith('any_value', salt)
+    })
 
-  it('should return a hash on success', async () => {
-    const hash = await sut.hash({ value: 'any_value' })
+    it('should return a hash on success', async () => {
+      const hash = await sut.hash({ value: 'any_value' })
 
-    expect(hash).toBe('hashed_value')
-  })
+      expect(hash).toBe('hashed_value')
+    })
 
-  it('should throw if hash throws', async () => {
-    fakeBcrypt.hash.mockImplementationOnce(async () => await Promise.reject(new Error()))
+    it('should throw if hash throws', async () => {
+      fakeBcrypt.hash.mockImplementationOnce(async () => await Promise.reject(new Error()))
 
-    const promise = sut.hash({ value: 'any_value' })
+      const promise = sut.hash({ value: 'any_value' })
 
-    await expect(promise).rejects.toThrow()
+      await expect(promise).rejects.toThrow()
+    })
   })
 })
