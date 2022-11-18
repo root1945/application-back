@@ -10,9 +10,11 @@ export default {
   }],
   tags: [{
     name: 'Login'
+  }, {
+    name: 'Register'
   }],
   paths: {
-    '/login': {
+    '/account/login': {
       post: {
         tags: ['Login'],
         summary: 'API to authenticate a user',
@@ -51,6 +53,45 @@ export default {
           }
         }
       }
+    },
+    '/account/signup': {
+      post: {
+        tags: ['Register'],
+        summary: 'API to create a user',
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/schemas/registerParams'
+              },
+              example: {
+                name: 'Juliana',
+                email: 'juliana@gmail.com',
+                password: 'juliana54',
+                passwordConfirmation: 'juliana54'
+              }
+            }
+          }
+        },
+        responses: {
+          200: {
+            description: 'Success',
+            content: {
+              'application/json': {
+                example: {
+                  accessToken: 'any_token'
+                }
+              }
+            }
+          },
+          400: {
+            $ref: '#/components/badRequest'
+          },
+          500: {
+            $ref: '#/components/serverError'
+          }
+        }
+      }
     }
   },
   schemas: {
@@ -65,6 +106,24 @@ export default {
         }
       },
       required: ['email', 'password']
+    },
+    registerParams: {
+      type: 'object',
+      properties: {
+        name: {
+          type: 'string'
+        },
+        email: {
+          type: 'string'
+        },
+        password: {
+          type: 'string'
+        },
+        passwordConfirmation: {
+          type: 'string'
+        }
+      },
+      required: ['name', 'email', 'password', 'passwordConfirmation']
     }
   },
   components: {
